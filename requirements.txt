@@ -1,0 +1,9 @@
+flask
+edge-tts
+pydub
+python-dotenv
+PyPDF2
+EbookLib
+beautifulsoup4
+kokoro-onnx
+soundfile

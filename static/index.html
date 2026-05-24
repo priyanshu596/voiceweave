@@ -1,0 +1,3076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceWeave — Expressive AI Narration & Dialogue Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #06081a;
+            --bg-secondary: #0d1117;
+            --accent-purple: #7c3aed;
+            --accent-cyan: #06b6d4;
+            --accent-pink: #ec4899;
+            --accent-green: #10b981;
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --glass-bg: rgba(13, 17, 23, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-glow: rgba(124, 58, 237, 0.15);
+            
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Ambient background glow elements */
+        .ambient-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glass-glow) 0%, rgba(6, 8, 26, 0) 70%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+            opacity: 0.6;
+        }
+        .glow-1 { top: -10%; left: -10%; background: radial-gradient(circle, rgba(124, 58, 237, 0.2) 0%, rgba(6, 8, 26, 0) 70%); }
+        .glow-2 { top: 40%; right: -10%; background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, rgba(6, 8, 26, 0) 70%); }
+        .glow-3 { bottom: 10%; left: 20%; background: radial-gradient(circle, rgba(236, 72, 153, 0.15) 0%, rgba(6, 8, 26, 0) 70%); }
+
+        /* Typography Helper Classes */
+        .grad-text {
+            background: linear-gradient(135deg, #a78bfa 0%, #06b6d4 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            letter-spacing: -0.025em;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 3rem auto;
+        }
+
+        /* Fixed Navigation */
+        nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4rem;
+            z-index: 1000;
+            transition: var(--transition);
+            border-bottom: 1px solid transparent;
+        }
+
+        nav.scrolled {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-bottom: 1px solid var(--glass-border);
+            height: 70px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover {
+            color: var(--text-primary);
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-nav {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.5);
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+        }
+
+        /* Mobile Dropdown Navigation */
+        .mobile-menu {
+            position: fixed;
+            top: 80px; left: 0; right: 0;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            list-style: none;
+            z-index: 999;
+            transform: translateY(-150%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(24px);
+        }
+
+        .mobile-menu.open {
+            transform: translateY(0);
+        }
+
+        .mobile-menu a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 8px 2rem;
+            z-index: 1;
+            margin-top: 40px;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            max-width: 900px;
+            letter-spacing: -0.03em;
+        }
+
+        .hero h1 span.type-container {
+            display: inline-block;
+            min-width: 320px;
+            text-align: left;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-bottom: 2.5rem;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.5);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .trust-badges {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 8rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 2.5rem;
+            border-radius: 24px;
+            transition: var(--transition);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(6, 182, 212, 0.1));
+            opacity: 0;
+            transition: var(--transition);
+            z-index: -1;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(124, 58, 237, 0.3);
+            box-shadow: 0 10px 30px rgba(124, 58, 237, 0.15);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            display: inline-block;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: scale(1.15) rotate(5deg);
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 8rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .steps-container {
+            display: flex;
+            justify-content: space-between;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            gap: 3rem;
+        }
+
+        .steps-line {
+            position: absolute;
+            top: 40px;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan), var(--accent-pink));
+            z-index: -1;
+        }
+
+        .step-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .step-number {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            border: 2px solid var(--accent-purple);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            box-shadow: 0 0 20px rgba(124, 58, 237, 0.2);
+            transition: var(--transition);
+        }
+
+        .step-item:hover .step-number {
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(124, 58, 237, 0.5);
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan));
+        }
+
+        .step-item h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .step-item p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            max-width: 250px;
+        }
+
+        /* Voice Gallery */
+        .voices-section {
+            padding: 8rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .voice-filters {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .btn-filter {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-filter.active, .btn-filter:hover {
+            background: var(--accent-purple);
+            color: white;
+            border-color: var(--accent-purple);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+        }
+
+        .voices-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .voice-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: var(--transition);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        .voice-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.15);
+        }
+
+        .voice-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.25rem;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
+        }
+
+        .voice-card:nth-child(even) .voice-avatar {
+            background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
+        }
+
+        .voice-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .voice-meta {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .voice-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+        }
+
+        .voice-badge.female { background: rgba(236, 72, 153, 0.15); color: var(--accent-pink); }
+        .voice-badge.male { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+        .voice-badge.accent { background: rgba(255, 255, 255, 0.05); color: var(--text-secondary); border: 1px solid var(--glass-border); }
+
+        .voice-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            height: 40px;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .btn-preview {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: var(--transition);
+        }
+
+        .btn-preview:hover, .btn-preview.playing {
+            background: white;
+            color: var(--bg-primary);
+            border-color: white;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.25);
+        }
+
+        .btn-preview.playing {
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        /* Pricing Section */
+        .pricing-section {
+            padding: 8rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            align-items: center;
+        }
+
+        .pricing-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: var(--transition);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .pricing-card.popular {
+            border: 2px solid var(--accent-purple);
+            box-shadow: 0 15px 40px rgba(124, 58, 237, 0.15);
+            background: linear-gradient(180deg, rgba(13, 17, 23, 0.9) 0%, rgba(6, 8, 26, 0.9) 100%);
+            transform: scale(1.03);
+        }
+        
+        .pricing-card.popular:hover {
+            transform: scale(1.03) translateY(-5px);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.4rem 1.25rem;
+            border-radius: 50px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            box-shadow: 0 4px 10px rgba(124, 58, 237, 0.3);
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price {
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+
+        .plan-price span {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .plan-features li {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .plan-features li::before {
+            content: '✓';
+            color: var(--accent-green);
+            font-weight: 900;
+            font-size: 1.1rem;
+        }
+
+        .pricing-card:not(.popular) .plan-features li::before {
+            color: var(--accent-cyan);
+        }
+
+        .btn-pricing {
+            width: 100%;
+            padding: 0.9rem;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .pricing-card.popular .btn-pricing {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-pink) 100%);
+            border: none;
+            color: white;
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.3);
+        }
+
+        .pricing-card.popular .btn-pricing:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(124, 58, 237, 0.5);
+        }
+
+        .pricing-card:not(.popular) .btn-pricing:hover {
+            background: white;
+            color: var(--bg-primary);
+            border-color: white;
+        }
+
+        /* API Section */
+        .api-section {
+            padding: 8rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .api-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            overflow: hidden;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        .api-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(13, 17, 23, 0.4);
+        }
+
+        .api-tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 1.25rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border-bottom: 2px solid transparent;
+        }
+
+        .api-tab-btn.active {
+            color: var(--text-primary);
+            border-bottom-color: var(--accent-purple);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .api-content {
+            padding: 3rem;
+        }
+
+        .api-pane {
+            display: none;
+        }
+
+        .api-pane.active {
+            display: block;
+        }
+
+        .api-pane h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .api-pane p {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        /* Table design */
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .api-table th, .api-table td {
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .api-table th {
+            color: var(--text-primary);
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .api-table td {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .method-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .method-badge.post { background: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+        .method-badge.get { background: rgba(6, 182, 212, 0.15); color: var(--accent-cyan); }
+
+        /* Code Block Design */
+        .code-wrapper {
+            position: relative;
+            background: #090d16;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            color: #e2e8f0;
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        .code-lang-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.5rem;
+        }
+
+        .code-lang-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .code-lang-btn.active {
+            color: var(--accent-cyan);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .code-block {
+            display: none;
+            white-space: pre;
+        }
+
+        .code-block.active {
+            display: block;
+        }
+
+        .code-kw { color: #f472b6; }
+        .code-str { color: #34d399; }
+        .code-comment { color: #64748b; }
+        .code-fn { color: #60a5fa; }
+
+        /* App Try It Section */
+        .app-section {
+            padding: 8rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .app-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 3rem;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        .app-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 0.25rem;
+            margin-bottom: 2rem;
+            width: fit-content;
+        }
+
+        .app-tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.6rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 50px;
+            transition: var(--transition);
+        }
+
+        .app-tab-btn.active {
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+        }
+
+        .app-pane {
+            display: none;
+        }
+
+        .app-pane.active {
+            display: block;
+        }
+
+        .preset-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-preset {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.4rem 0.9rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-preset:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+        }
+
+        .textarea-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 1.25rem;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.95rem;
+            resize: vertical;
+            transition: var(--transition);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 15px rgba(124, 58, 237, 0.15);
+        }
+
+        .char-counter {
+            position: absolute;
+            bottom: 1rem; right: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Upload Area */
+        .drag-zone {
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 4rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        .drag-zone:hover, .drag-zone.dragover {
+            border-color: var(--accent-cyan);
+            background: rgba(6, 182, 212, 0.05);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.1);
+        }
+
+        .drag-zone input[type="file"] {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .drag-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .selected-file-display {
+            margin-top: 1rem;
+            font-weight: 600;
+            color: var(--accent-green);
+            font-size: 0.95rem;
+        }
+
+        /* Voice Assignment panel */
+        .voice-assignment-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .voice-assignment-panel.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .assignment-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 0.75rem;
+        }
+
+        .assignment-title-row h4 {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .btn-auto-assign {
+            background: none;
+            border: none;
+            color: var(--accent-cyan);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-auto-assign:hover {
+            text-decoration: underline;
+            color: white;
+        }
+
+        .speaker-assignment-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            gap: 1rem;
+        }
+
+        .speaker-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+        }
+
+        .assign-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        select {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            outline: none;
+            cursor: pointer;
+        }
+
+        select:focus {
+            border-color: var(--accent-purple);
+        }
+
+        /* Generate full width action button */
+        .btn-generate-flow {
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            color: white;
+            border: none;
+            padding: 1.1rem;
+            border-radius: 50px;
+            font-weight: 800;
+            font-size: 1.15rem;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.75rem;
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-generate-flow:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(124, 58, 237, 0.6);
+        }
+
+        .btn-generate-flow:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease infinite;
+            display: none;
+        }
+
+        .btn-generate-flow.loading .spinner {
+            display: block;
+        }
+        
+        .btn-generate-flow.loading span {
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Progress design */
+        .progress-wrapper {
+            margin-top: 2rem;
+            display: none;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            padding: 1.5rem;
+            border-radius: 16px;
+        }
+
+        .progress-wrapper.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .progress-status-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan), var(--accent-pink));
+            border-radius: 50px;
+            transition: width 0.4s ease;
+            position: relative;
+        }
+        
+        .progress-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Custom Audio Player */
+        .audio-player-container {
+            margin-top: 2.5rem;
+            display: none;
+            background: linear-gradient(135deg, rgba(13,17,23,0.85) 0%, rgba(6,8,26,0.85) 100%);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.5s ease;
+        }
+
+        .audio-player-container.active {
+            display: block;
+        }
+
+        .waveform-canvas-wrapper {
+            width: 100%;
+            margin-bottom: 1.5rem;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.03);
+            padding: 0.5rem;
+        }
+
+        #waveformCanvas {
+            width: 100%;
+            height: 80px;
+            display: block;
+        }
+
+        .player-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .player-left {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .btn-play-pause {
+            width: 54px;
+            height: 54px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4);
+        }
+
+        .btn-play-pause:hover {
+            transform: scale(1.08);
+            box-shadow: 0 6px 20px rgba(124, 58, 237, 0.6);
+        }
+
+        .time-display {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .player-center {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            min-width: 200px;
+        }
+
+        .playback-slider-container {
+            width: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 50px;
+            cursor: pointer;
+        }
+
+        .playback-progress-track {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-cyan));
+            border-radius: 50px;
+            position: relative;
+        }
+
+        .playback-slider-thumb {
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            right: -7px;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            transition: transform 0.15s ease;
+        }
+
+        .playback-slider-container:hover .playback-slider-thumb {
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        .player-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .volume-icon {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .volume-slider {
+            width: 80px;
+            cursor: pointer;
+            accent-color: var(--accent-cyan);
+            height: 4px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50px;
+        }
+
+        .btn-download-audio {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-download-audio:hover {
+            background: white;
+            color: var(--bg-primary);
+            border-color: white;
+            box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        /* Collapsible Parsed Blocks Preview */
+        .parsed-blocks-section {
+            margin-top: 1.5rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            overflow: hidden;
+            background: rgba(255,255,255,0.01);
+        }
+
+        .parsed-header-toggle {
+            width: 100%;
+            background: none;
+            border: none;
+            color: var(--text-primary);
+            padding: 1.1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .parsed-header-toggle:hover {
+            background: rgba(255,255,255,0.02);
+        }
+
+        .parsed-arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .parsed-blocks-section.open .parsed-arrow {
+            transform: rotate(180deg);
+        }
+
+        .parsed-content-body {
+            max-height: 0px;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .parsed-blocks-section.open .parsed-content-body {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dialogue-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .dialogue-item:last-child {
+            border-bottom: none;
+        }
+
+        .dialogue-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dialogue-speaker {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+        }
+
+        .dialogue-speaker.narrator {
+            color: var(--text-secondary);
+        }
+
+        .dialogue-emotion-pill {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 5px;
+            background: rgba(124, 58, 237, 0.15);
+            color: var(--accent-purple);
+            text-transform: uppercase;
+        }
+
+        .dialogue-text {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        /* Footer */
+        footer {
+            background: #03040c;
+            border-top: 1px solid var(--glass-border);
+            padding: 6rem 4rem 2rem 4rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 3rem;
+            max-width: 1200px;
+            margin: 0 auto 4rem auto;
+        }
+
+        .footer-logo-col {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 768px) {
+            .footer-logo-col {
+                grid-column: span 1;
+            }
+        }
+
+        .footer-logo-col p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 1rem;
+            max-width: 250px;
+        }
+
+        .footer-col h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .footer-col ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .footer-col ul a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .footer-col ul a:hover {
+            color: var(--text-primary);
+        }
+
+        .newsletter-wrapper {
+            margin-top: 1.5rem;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 0.5rem;
+            max-width: 300px;
+        }
+
+        .newsletter-form input {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 0.5rem 1rem;
+            color: var(--text-primary);
+            outline: none;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+
+        .newsletter-form input:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .btn-subscribe {
+            background: var(--accent-purple);
+            color: white;
+            border: none;
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .btn-subscribe:hover {
+            background: #6d28d9;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 0 auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-bottom-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-bottom-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-bottom-links a:hover {
+            color: var(--text-secondary);
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            background: rgba(13, 17, 23, 0.9);
+            border: 1px solid var(--glass-border);
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast.success { border-left: 4px solid var(--accent-green); }
+        .toast.error { border-left: 4px solid var(--accent-pink); }
+        .toast.info { border-left: 4px solid var(--accent-cyan); }
+
+        /* General Keyframe Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Intersection Observer Animation Classes */
+        .reveal-element {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .reveal-element.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Responsive spacing */
+        @media (max-width: 1024px) {
+            nav { padding: 0 2rem; }
+        }
+
+        @media (max-width: 768px) {
+            nav { height: 70px; }
+            .nav-links, .btn-nav { display: none; }
+            .menu-toggle { display: block; }
+            .hero h1 { font-size: 2.75rem; }
+            .hero h1 span.type-container { min-width: unset; display: inline; }
+            .steps-container { flex-direction: column; gap: 2.5rem; }
+            .steps-line { display: none; }
+            .pricing-card.popular { transform: none; }
+            .pricing-card.popular:hover { transform: translateY(-5px); }
+            .app-container, .api-content, .features, .how-it-works, .voices-section, .pricing-section, .api-section, .app-section {
+                padding: 4rem 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient glowing decorations -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <!-- Toast container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Navigation Header -->
+    <nav id="navbar">
+        <a href="#" class="logo">🎙️ <span class="grad-text">VoiceWeave</span></a>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#voices">Voices</a></li>
+            <li><a href="#pricing">Pricing</a></li>
+            <li><a href="#api">API</a></li>
+            <li><a href="#app">Try It</a></li>
+        </ul>
+        <button class="btn-nav" onclick="scrollToApp()">Get Started</button>
+        <button class="menu-toggle" id="menuToggle" aria-label="Toggle Navigation">☰</button>
+    </nav>
+
+    <!-- Mobile Dropdown Navigation -->
+    <ul class="mobile-menu" id="mobileMenu">
+        <li><a href="#features" onclick="toggleMenu()">Features</a></li>
+        <li><a href="#how-it-works" onclick="toggleMenu()">How It Works</a></li>
+        <li><a href="#voices" onclick="toggleMenu()">Voices</a></li>
+        <li><a href="#pricing" onclick="toggleMenu()">Pricing</a></li>
+        <li><a href="#api" onclick="toggleMenu()">API</a></li>
+        <li><a href="#app" onclick="toggleMenu()">Try It</a></li>
+        <li><button class="btn-nav" style="width: 100%;" onclick="scrollToApp(); toggleMenu();">Get Started</button></li>
+    </ul>
+
+    <!-- Hero Section -->
+    <header class="hero reveal-element">
+        <h1>Transform Stories Into <br><span class="grad-text" id="typedHero">Multi-Voice Drama</span></h1>
+        <p>Turn plain text, PDFs, or EPUBs into emotionally expressive multi-speaker audio narration. Powered by neural voice technology with automatic character and emotion detection.</p>
+        <div class="hero-ctas">
+            <button class="btn-primary" onclick="scrollToApp()">Try It Free →</button>
+            <a href="#api" class="btn-secondary">View API Docs</a>
+        </div>
+        <div class="trust-badges">
+            <div class="badge">✓ No API Key Required</div>
+            <div class="badge">✓ 12+ Premium Neural Voices</div>
+            <div class="badge">✓ Instant Generation</div>
+            <div class="badge">✓ Free Tier Available</div>
+        </div>
+    </header>
+
+    <!-- Features Section -->
+    <section class="features reveal-element" id="features">
+        <h2 class="section-title">Powerful <span class="grad-text">Features</span></h2>
+        <p class="section-subtitle">A professional suite of narrative features tailored for content creators, developers, and narrators.</p>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <span class="feature-icon">🎭</span>
+                <h3>Multi-Speaker Detection</h3>
+                <p>Automatically scans dialogue tags and assigns unique voice profiles to different characters in your story.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">💫</span>
+                <h3>Emotional Intelligence</h3>
+                <p>Detects emotional cues like whispering, shouting, weeping, or roaring and adapts the voice's pitch and pacing.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">📚</span>
+                <h3>Multi-Format Support</h3>
+                <p>Upload TXT, PDF, or EPUB formats directly. Or copy-paste text inside our interactive creator canvas.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">⚡</span>
+                <h3>Instant Generation</h3>
+                <p>High-performance neural speech synthesis engines process your text and return audio downloads in seconds.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🎛️</span>
+                <h3>Voice Customization</h3>
+                <p>Fine-tune and assign curated voices with different genders, accents, and tones for every single narrator and character.</p>
+            </div>
+            <div class="feature-card">
+                <span class="feature-icon">🔌</span>
+                <h3>Developer API</h3>
+                <p>Integrate our expressive speech engine directly into your software. Clean endpoints with comprehensive documentation.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section class="how-it-works reveal-element" id="how-it-works">
+        <h2 class="section-title">How It <span class="grad-text">Works</span></h2>
+        <p class="section-subtitle">From simple manuscript to completed high-definition audio drama in three straightforward steps.</p>
+        
+        <div class="steps-container">
+            <div class="steps-line"></div>
+            <div class="step-item">
+                <div class="step-number">1</div>
+                <h3>Upload Your Text</h3>
+                <p>Paste your content, or drag and drop a TXT, PDF, or EPUB file directly into our dashboard.</p>
+            </div>
+            <div class="step-item">
+                <div class="step-number">2</div>
+                <h3>AI Analyzes & Parses</h3>
+                <p>Our rule-based NLP parser isolates dialogue blocks, assigns characters, and extracts emotional markers.</p>
+            </div>
+            <div class="step-item">
+                <div class="step-number">3</div>
+                <h3>Download Your Audio</h3>
+                <p>Review the voice mappings, preview snippets, generate the final mix, and save it instantly.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Voice Gallery Section -->
+    <section class="voices-section reveal-element" id="voices">
+        <h2 class="section-title">Premium <span class="grad-text">Neural Voices</span></h2>
+        <p class="section-subtitle">Preview and choose from our catalog of highly curated, natural-sounding voice models.</p>
+        
+        <div class="voice-filters">
+            <button class="btn-filter active" onclick="filterVoices('all')">All</button>
+            <button class="btn-filter" onclick="filterVoices('female')">Female</button>
+            <button class="btn-filter" onclick="filterVoices('male')">Male</button>
+        </div>
+
+        <div class="voices-grid" id="voicesGrid">
+            <!-- Dynamically populated from API -->
+            <div style="text-align: center; grid-column: 1/-1; padding: 2rem; color: var(--text-secondary);">
+                Loading voice gallery...
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing-section reveal-element" id="pricing">
+        <h2 class="section-title">Simple, <span class="grad-text">Transparent Pricing</span></h2>
+        <p class="section-subtitle">Select the tier that matches your production scale. Upgrade or downgrade at any time.</p>
+        
+        <div class="pricing-grid">
+            <!-- Free Plan -->
+            <div class="pricing-card">
+                <h3 class="plan-name">Free</h3>
+                <div class="plan-price">$0<span>/month</span></div>
+                <ul class="plan-features">
+                    <li>10,000 characters / mo</li>
+                    <li>5 file uploads / day</li>
+                    <li>4 curated voices</li>
+                    <li>Standard audio quality</li>
+                    <li>Community support</li>
+                </ul>
+                <button class="btn-pricing" onclick="scrollToApp()">Get Started Free</button>
+            </div>
+            <!-- Pro Plan -->
+            <div class="pricing-card popular">
+                <div class="popular-badge">Most Popular</div>
+                <h3 class="plan-name">Pro</h3>
+                <div class="plan-price">$19<span>/month</span></div>
+                <ul class="plan-features">
+                    <li>500,000 characters / mo</li>
+                    <li>Unlimited uploads</li>
+                    <li>All 12+ premium voices</li>
+                    <li>HD audio outputs (.mp3)</li>
+                    <li>REST API access</li>
+                    <li>Priority email support</li>
+                </ul>
+                <button class="btn-pricing" onclick="scrollToApp()">Start Pro Trial</button>
+            </div>
+            <!-- Enterprise Plan -->
+            <div class="pricing-card">
+                <h3 class="plan-name">Enterprise</h3>
+                <div class="plan-price">Custom</div>
+                <ul class="plan-features">
+                    <li>Unlimited characters</li>
+                    <li>Unlimited file size uploads</li>
+                    <li>Custom voice cloning</li>
+                    <li>Priority API server routing</li>
+                    <li>Lossless audio outputs</li>
+                    <li>24/7 dedicated support</li>
+                </ul>
+                <button class="btn-pricing" onclick="showToast('Contact sales at sales@voiceweave.ai')">Contact Sales</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Documentation Section -->
+    <section class="api-section reveal-element" id="api">
+        <h2 class="section-title">Developer <span class="grad-text">API</span></h2>
+        <p class="section-subtitle">Integrate multi-voice expressive speech generation into your web apps, systems, or games.</p>
+        
+        <div class="api-container">
+            <div class="api-tabs">
+                <button class="api-tab-btn active" onclick="switchApiTab(event, 'quickStart')">Quick Start</button>
+                <button class="api-tab-btn" onclick="switchApiTab(event, 'endpoints')">Endpoints</button>
+                <button class="api-tab-btn" onclick="switchApiTab(event, 'auth')">Authentication</button>
+                <button class="api-tab-btn" onclick="switchApiTab(event, 'examples')">Examples</button>
+            </div>
+            
+            <div class="api-content">
+                <!-- Quick Start Pane -->
+                <div class="api-pane active" id="pane-quickStart">
+                    <h3>Get Started in Minutes</h3>
+                    <p>Execute narration generations using simple HTTP POST requests. Here is the easiest way to generate audio using standard shell tools.</p>
+                    <div class="code-wrapper">
+                        <div class="code-block active">
+<span class="code-comment"># Generate multi-voice narration for your story text</span>
+curl -X POST https://api.voiceweave.ai/api/narrate \
+  -H <span class="code-str">"Content-Type: application/json"</span> \
+  -d '{
+    <span class="code-kw">"text"</span>: <span class="code-str">"\"Hello!\" she said. \"Hey there,\" he replied."</span>,
+    <span class="code-kw">"voice_map"</span>: {
+      <span class="code-kw">"narrator"</span>: <span class="code-str">"davis"</span>,
+      <span class="code-kw">"she"</span>: <span class="code-str">"aria"</span>,
+      <span class="code-kw">"he"</span>: <span class="code-str">"guy"</span>
+    }
+  }'
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Endpoints Pane -->
+                <div class="api-pane" id="pane-endpoints">
+                    <h3>API Resource Endpoints</h3>
+                    <p>Explore the endpoints supported by the VoiceWeave API service.</p>
+                    <table class="api-table">
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Endpoint</th>
+                                <th>Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><code>/api/narrate</code></td>
+                                <td>Generate narration from text. Accepts a <code>voice_map</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><code>/api/parse</code></td>
+                                <td>Analyze dialogue blocks & characters from text.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="method-badge post">POST</span></td>
+                                <td><code>/api/upload</code></td>
+                                <td>Upload manuscript (.epub, .pdf, .txt) for async generation.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="method-badge get">GET</span></td>
+                                <td><code>/api/voices</code></td>
+                                <td>Get the listing of all available voices.</td>
+                            </tr>
+                            <tr>
+                                <td><span class="method-badge get">GET</span></td>
+                                <td><code>/api/status/:id</code></td>
+                                <td>Poll status for background file conversions.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Auth Pane -->
+                <div class="api-pane" id="pane-auth">
+                    <h3>Authentication</h3>
+                    <p>To use our hosted API servers in production, you must register a developer account in your dashboard and request an API key. For local testing during this hackathon, no API token header authentication is active.</p>
+                    <div class="code-wrapper">
+                        <div class="code-block active">
+<span class="code-comment"># Authenticate requests using the Bearer Token header:</span>
+Authorization: Bearer <span class="code-str">vw_live_7c3aed...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Examples Pane -->
+                <div class="api-pane" id="pane-examples">
+                    <h3>Code Integration Examples</h3>
+                    <div class="code-lang-tabs">
+                        <button class="code-lang-btn active" onclick="switchLangTab(event, 'python')">Python</button>
+                        <button class="code-lang-btn" onclick="switchLangTab(event, 'js')">JavaScript</button>
+                    </div>
+                    <div class="code-wrapper">
+                        <!-- Python Code -->
+                        <div class="code-block active" id="code-python">
+<span class="code-kw">import</span> requests
+
+payload = {
+    <span class="code-str">"text"</span>: <span class="code-str">'"No!" she stammered. "Run!" he hissed.'</span>,
+    <span class="code-str">"voice_map"</span>: {
+        <span class="code-str">"narrator"</span>: <span class="code-str">"davis"</span>,
+        <span class="code-str">"she"</span>: <span class="code-str">"aria"</span>,
+        <span class="code-str">"he"</span>: <span class="code-str">"ryan"</span>
+    }
+}
+
+response = requests.post(
+    <span class="code-str">"https://api.voiceweave.ai/api/narrate"</span>,
+    json=payload
+)
+
+result = response.json()
+print(<span class="code-str">f"Audio URL: {result['audio_url']}"</span>)
+                        </div>
+                        <!-- JS Code -->
+                        <div class="code-block" id="code-js">
+<span class="code-kw">const</span> response = <span class="code-kw">await</span> <span class="code-fn">fetch</span>(<span class="code-str">'/api/narrate'</span>, {
+  <span class="code-kw">method</span>: <span class="code-str">'POST'</span>,
+  <span class="code-kw">headers</span>: { <span class="code-str">'Content-Type'</span>: <span class="code-str">'application/json'</span> },
+  <span class="code-kw">body</span>: JSON.stringify({
+    <span class="code-kw">text</span>: <span class="code-str">'"Is anyone there?" she whispered.'</span>,
+    <span class="code-kw">voice_map</span>: { <span class="code-kw">narrator</span>: <span class="code-str">'davis'</span>, <span class="code-kw">she</span>: <span class="code-str">'jenny'</span> }
+  })
+});
+
+<span class="code-kw">const</span> data = <span class="code-kw">await</span> response.json();
+console.log(<span class="code-str">'Generated Audio URL:'</span>, data.audio_url);
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Interactive App Workspace -->
+    <section class="app-section reveal-element" id="app">
+        <h2 class="section-title">Try <span class="grad-text">VoiceWeave</span></h2>
+        <p class="section-subtitle">Test character detection, assign different voices, and synthesize narration instantly.</p>
+        
+        <div class="app-container">
+            <div class="app-tabs">
+                <button class="app-tab-btn active" onclick="switchAppTab('paste')">📝 Paste Text</button>
+                <button class="app-tab-btn" onclick="switchAppTab('upload')">📂 Upload File</button>
+            </div>
+
+            <!-- Paste Tab -->
+            <div class="app-pane active" id="app-paste">
+                <div class="preset-row">
+                    <button class="btn-preset" onclick="loadPreset('romance')">🎭 Romance Drama</button>
+                    <button class="btn-preset" onclick="loadPreset('action')">💥 Action Scene</button>
+                    <button class="btn-preset" onclick="loadPreset('thriller')">🕵️ Mystery Thriller</button>
+                </div>
+                <div class="textarea-wrapper">
+                    <textarea id="inputText" placeholder="Write or paste your dialogue-rich story here... Use double quotes for spoken character dialogue."></textarea>
+                    <div class="char-counter" id="charCount">0 chars</div>
+                </div>
+            </div>
+
+            <!-- Upload Tab -->
+            <div class="app-pane" id="app-upload">
+                <div class="drag-zone" id="dropZone">
+                    <span class="drag-icon">📁</span>
+                    <h3>Drag & drop your story here</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Supports PDF, EPUB, and TXT files up to 30,000 characters.</p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem;">Or click here to browse files on your computer</p>
+                    <input type="file" id="fileInput" accept=".txt,.pdf,.epub">
+                    <div class="selected-file-display" id="selectedFile"></div>
+                </div>
+                <div id="fileAnalyzeWrapper" style="margin-top: 1rem; display: none; text-align: center;">
+                    <button class="btn-secondary" style="padding: 0.6rem 1.5rem; font-size: 0.9rem; font-weight: 600;" onclick="analyzeSelectedFile(event)">🔍 Analyze Characters in File</button>
+                </div>
+            </div>
+
+            <!-- Dynamic Voice Assignment Panel -->
+            <div class="voice-assignment-panel" id="assignmentPanel">
+                <div class="assignment-title-row">
+                    <h4>Assign Voices to Characters</h4>
+                    <button class="btn-auto-assign" onclick="autoAssignAll()">Reset / Auto-Assign</button>
+                </div>
+                <div id="assignmentRowsContainer">
+                    <!-- Javascript populates row items for every speaker -->
+                </div>
+            </div>
+
+            <!-- Primary Generate Actions -->
+            <div id="appActionWrapper">
+                <!-- If Paste Tab: Let's do Parse first or Narrate directly -->
+                <button class="btn-generate-flow" id="mainAppBtn" onclick="handleGenerateClick()">
+                    <span>✨ Generate Narration</span>
+                    <div class="spinner"></div>
+                </button>
+            </div>
+
+            <!-- Background Job Progress Tracking -->
+            <div class="progress-wrapper" id="progressWrapper">
+                <div class="progress-status-row">
+                    <span id="progressText">Synthesizing audio segments...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progressBarFill"></div>
+                </div>
+            </div>
+
+            <!-- Custom Waveform Audio Player -->
+            <div class="audio-player-container" id="playerContainer">
+                <div class="waveform-canvas-wrapper">
+                    <canvas id="waveformCanvas"></canvas>
+                </div>
+                <div class="player-controls">
+                    <div class="player-left">
+                        <button class="btn-play-pause" id="playPauseBtn" onclick="togglePlayback()">▶</button>
+                        <div class="time-display">
+                            <span id="currentTime">00:00</span> / <span id="totalTime">00:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="player-center">
+                        <div class="playback-slider-container" id="playTrack" onclick="seekAudio(event)">
+                            <div class="playback-progress-track" id="playProgress">
+                                <div class="playback-slider-thumb"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="player-right">
+                        <span class="volume-icon">🔊</span>
+                        <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.05" value="0.8" oninput="changeVolume(this.value)">
+                        <button class="btn-download-audio" id="downloadBtn"><span>📥 Download</span></button>
+                    </div>
+                </div>
+                
+                <!-- Collapsible dialogue transcript segment details -->
+                <div class="parsed-blocks-section" id="parsedSection">
+                    <button class="parsed-header-toggle" onclick="toggleParsedSection()">
+                        <span>View Parsed Dialogue Blocks</span>
+                        <span class="parsed-arrow">▼</span>
+                    </button>
+                    <div class="parsed-content-body" id="parsedContentBody">
+                        <!-- Dialogue lists go here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Area -->
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-logo-col">
+                <a href="#" class="logo">🎙️ <span class="grad-text">VoiceWeave</span></a>
+                <p>The premium, AI-driven expressive speech synthesis platform for multi-voice stories and documents.</p>
+                <div class="newsletter-wrapper">
+                    <h4 style="margin-bottom: 0.75rem; font-size: 0.9rem;">Stay updated with our newsletter</h4>
+                    <form class="newsletter-form" onsubmit="event.preventDefault(); showToast('Subscribed successfully!');">
+                        <input type="email" placeholder="Enter your email" required>
+                        <button type="submit" class="btn-subscribe">Subscribe</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#voices">Voice Gallery</a></li>
+                    <li><a href="#pricing">Pricing Plans</a></li>
+                    <li><a href="#app">Sandbox Creator</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Developers</h4>
+                <ul>
+                    <li><a href="#api">API Reference</a></li>
+                    <li><a href="#api">Quick Start Guide</a></li>
+                    <li><a href="#api">Authorization</a></li>
+                    <li><a href="https://github.com" target="_blank">GitHub Repository</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Company</h4>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Terms & Conditions</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <div>© 2026 VoiceWeave. All rights reserved. Built locally with edge-tts.</div>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Security</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Hidden native audio element -->
+    <audio id="nativeAudio" style="display: none;"></audio>
+
+    <script>
+        // === Core State Management ===
+        let currentTab = 'paste'; // 'paste' or 'upload'
+        let voiceCatalog = {};
+        let detectedSpeakers = [];
+        let speakerGenders = {};
+        let assignedVoiceMap = {};
+        let parsedBlocksList = [];
+        let generatedAudioUrl = '';
+        
+        // Audio playback state
+        const nativeAudio = document.getElementById('nativeAudio');
+        let isPlaying = false;
+        let playbackProgressInterval;
+        let animationFrameId;
+        
+        // Canvas visualization params
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+        let waveformData = [];
+
+        // Story Presets
+        const presets = {
+            romance: `"Darling, please don't leave me," Clara whispered, tears pooling in her dark eyes.\n\nJulian looked down, his jaw tight. "Enough! This drama has to end," he shouted, slamming his fist on the marble table.\n\nShe gasped, taking a step backward, completely terrified by the sudden fury in his eyes.\n\n"I never meant to hurt you," he added in an authoritative tone, softening but standing firm.`,
+            action: `"Cover the exit!" Ryan roared, firing a final volley toward the dark corridor.\n\n"We don't have enough ammo!" Natasha screamed in response, ducking behind the concrete pillar.\n\n"Just keep shooting!" he commanded. "We make our stand right here!"`,
+            thriller: `"Did you hear that?" Sonia whispered, clutching the flashlight tightly.\n\n"It's just the wind," Liam declared in a calm voice, though his eyes darted nervously.\n\nSuddenly, a shadow fell across the doorway. "Who is there?" Sonia demanded, her voice trembling in terror.`
+        };
+
+        // Typist Header Phrases
+        const phrases = ["Living Audio", "Expressive Narration", "Multi-Voice Drama", "Emotional Stories"];
+        let phraseIndex = 0;
+        let charIndex = 0;
+        let isDeleting = false;
+        const typedHero = document.getElementById('typedHero');
+
+        // Init setup on window load
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchVoices();
+            setupIntersectionObserver();
+            typeAnimation();
+            setupDragDrop();
+            
+            // Audio elements updates
+            nativeAudio.addEventListener('loadedmetadata', updateDuration);
+            nativeAudio.addEventListener('timeupdate', updatePlaybackProgress);
+            nativeAudio.addEventListener('ended', handlePlaybackEnd);
+        });
+
+        // Sticky Navbar background change on scroll
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Mobile menu toggle
+        const menuToggle = document.getElementById('menuToggle');
+        const mobileMenu = document.getElementById('mobileMenu');
+
+        menuToggle.addEventListener('click', toggleMenu);
+
+        function toggleMenu() {
+            mobileMenu.classList.toggle('open');
+            menuToggle.textContent = mobileMenu.classList.contains('open') ? '✕' : '☰';
+        }
+
+        // Smooth scrolling helper
+        function scrollToApp() {
+            document.getElementById('app').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Typist implementation
+        function typeAnimation() {
+            const currentPhrase = phrases[phraseIndex];
+            
+            if (isDeleting) {
+                typedHero.textContent = currentPhrase.substring(0, charIndex - 1);
+                charIndex--;
+            } else {
+                typedHero.textContent = currentPhrase.substring(0, charIndex + 1);
+                charIndex++;
+            }
+
+            let delay = 100;
+            if (isDeleting) delay /= 2;
+
+            if (!isDeleting && charIndex === currentPhrase.length) {
+                delay = 2000; // Pause at end of phrase
+                isDeleting = true;
+            } else if (isDeleting && charIndex === 0) {
+                isDeleting = false;
+                phraseIndex = (phraseIndex + 1) % phrases.length;
+                delay = 500; // Pause before typing next
+            }
+
+            setTimeout(typeAnimation, delay);
+        }
+
+        // Intersection Observer for scroll entrance reveals
+        function setupIntersectionObserver() {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            document.querySelectorAll('.reveal-element').forEach(el => {
+                observer.observe(el);
+            });
+        }
+
+        // Fetch Voices from backend API
+        async function fetchVoices() {
+            try {
+                const response = await fetch('/api/voices');
+                if (!response.ok) throw new Error('Failed to load voice catalog');
+                const data = await response.json();
+                voiceCatalog = data;
+                renderVoiceGallery();
+            } catch (err) {
+                showToast('Error loading voices: ' + err.message, 'error');
+                // Fallback local display catalog mock if API error
+                voiceCatalog = {
+                    "aria": {"id": "en-US-AriaNeural", "name": "Aria", "gender": "Female", "accent": "American", "style": "Warm & Expressive"},
+                    "guy": {"id": "en-US-GuyNeural", "name": "Guy", "gender": "Male", "accent": "American", "style": "Confident & Clear"},
+                    "jenny": {"id": "en-US-JennyNeural", "name": "Jenny", "gender": "Female", "accent": "American", "style": "Friendly & Casual"},
+                    "davis": {"id": "en-US-GuyNeural", "name": "Davis", "gender": "Male", "accent": "American", "style": "Deep & Authoritative"},
+                    "sonia": {"id": "en-GB-SoniaNeural", "name": "Sonia", "gender": "Female", "accent": "British", "style": "Elegant & Refined"},
+                    "ryan": {"id": "en-GB-RyanNeural", "name": "Ryan", "gender": "Male", "accent": "British", "style": "Warm & Natural"},
+                    "natasha": {"id": "en-AU-NatashaNeural", "name": "Natasha", "gender": "Female", "accent": "Australian", "style": "Bright & Energetic"},
+                    "william": {"id": "en-AU-WilliamMultilingualNeural", "name": "William", "gender": "Male", "accent": "Australian", "style": "Calm & Steady"}
+                };
+                renderVoiceGallery();
+            }
+        }
+
+        // Render Voice Gallery grid items
+        function renderVoiceGallery(filter = 'all') {
+            const grid = document.getElementById('voicesGrid');
+            grid.innerHTML = '';
+            
+            Object.entries(voiceCatalog).forEach(([key, voice]) => {
+                const isFemale = voice.gender.toLowerCase() === 'female';
+                if (filter === 'female' && !isFemale) return;
+                if (filter === 'male' && isFemale) return;
+
+                const initials = voice.name.substring(0, 2).toUpperCase();
+                const card = document.createElement('div');
+                card.className = 'voice-card';
+                card.innerHTML = `
+                    <div class="voice-avatar">${initials}</div>
+                    <h3>${voice.name}</h3>
+                    <div class="voice-meta">
+                        <span class="voice-badge ${voice.gender.toLowerCase()}">${voice.gender}</span>
+                        <span class="voice-badge accent">${voice.accent}</span>
+                    </div>
+                    <p class="voice-desc">${voice.style}</p>
+                    <button class="btn-preview" id="preview-btn-${key}" onclick="playVoicePreview('${key}', event)">
+                        <span>▶ Preview</span>
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterVoices(gender) {
+            document.querySelectorAll('.voice-filters .btn-filter').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderVoiceGallery(gender);
+        }
+
+        // Voice Preview Playback
+        let activePreviewAudio = null;
+        let activePreviewButton = null;
+
+        async function playVoicePreview(voiceKey, event) {
+            const btn = event.currentTarget;
+            
+            // If already playing this preview, stop it
+            if (activePreviewAudio && activePreviewButton === btn) {
+                stopActivePreview();
+                return;
+            }
+            
+            // Stop any other active preview first
+            stopActivePreview();
+            
+            btn.classList.add('playing');
+            btn.innerHTML = '<span>⏸ Playing</span>';
+            activePreviewButton = btn;
+            
+            const audioUrl = `/api/voices/${voiceKey}/preview`;
+            activePreviewAudio = new Audio(audioUrl);
+            
+            activePreviewAudio.onended = () => {
+                stopActivePreview();
+            };
+            
+            activePreviewAudio.onerror = () => {
+                showToast('Failed to play preview', 'error');
+                stopActivePreview();
+            };
+            
+            try {
+                await activePreviewAudio.play();
+            } catch (err) {
+                showToast('Failed to start preview audio', 'error');
+                stopActivePreview();
+            }
+        }
+
+        function stopActivePreview() {
+            if (activePreviewAudio) {
+                activePreviewAudio.pause();
+                activePreviewAudio = null;
+            }
+            if (activePreviewButton) {
+                activePreviewButton.classList.remove('playing');
+                activePreviewButton.innerHTML = '<span>▶ Preview</span>';
+                activePreviewButton = null;
+            }
+        }
+
+        // === Workspace App Functionality ===
+        function switchAppTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.app-tabs .app-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.app-container .app-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            
+            if (tab === 'paste') {
+                document.getElementById('app-paste').classList.add('active');
+                document.getElementById('mainAppBtn').innerHTML = '<span>✨ Generate Narration</span>';
+                document.getElementById('assignmentPanel').classList.remove('active');
+            } else {
+                document.getElementById('app-upload').classList.add('active');
+                document.getElementById('mainAppBtn').innerHTML = '<span>✨ Upload & Process</span>';
+                document.getElementById('assignmentPanel').classList.remove('active');
+            }
+            
+            // Reset player / progress state when switching tabs
+            resetUI();
+        }
+
+        // Load Preset Text
+        function loadPreset(key) {
+            const textarea = document.getElementById('inputText');
+            textarea.value = presets[key];
+            textarea.dispatchEvent(new Event('input'));
+            showToast(`Loaded ${key} scenario preset`);
+            
+            // Clear previous parses and players
+            resetUI();
+            
+            // Trigger automatic character parse so they can see the assignment panel right away!
+            triggerLocalParse();
+        }
+
+        // Local Parsing trigger on preset load / manual button
+        async function triggerLocalParse() {
+            const text = document.getElementById('inputText').value.trim();
+            if (!text) return;
+            
+            try {
+                const response = await fetch('/api/parse', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                
+                if (!response.ok) throw new Error('Failed to parse text characters');
+                const data = await response.json();
+                
+                if (data.speakers && data.speakers.length > 0) {
+                    detectedSpeakers = data.speakers;
+                    speakerGenders = data.speaker_genders || {};
+                    showVoiceAssignmentPanel();
+                }
+            } catch (err) {
+                console.warn('Character parse skipped: ' + err.message);
+            }
+        }
+
+        // Setup Drag & Drop Upload Handlers
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const selectedFileDisplay = document.getElementById('selectedFile');
+
+        function setupDragDrop() {
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                }, false);
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length) {
+                    fileInput.files = files;
+                    updateFileLabel();
+                }
+            });
+
+            fileInput.addEventListener('change', updateFileLabel);
+        }
+
+        function updateFileLabel() {
+            if (fileInput.files.length) {
+                const file = fileInput.files[0];
+                selectedFileDisplay.textContent = `Selected File: ${file.name} (${(file.size/1024).toFixed(1)} KB)`;
+                showToast(`Loaded document: ${file.name}`);
+                
+                document.getElementById('fileAnalyzeWrapper').style.display = 'block';
+                document.getElementById('assignmentPanel').classList.remove('active');
+            } else {
+                selectedFileDisplay.textContent = '';
+                document.getElementById('fileAnalyzeWrapper').style.display = 'none';
+            }
+        }
+
+        async function analyzeSelectedFile(event) {
+            event.preventDefault();
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast('Please select a file first', 'error');
+                return;
+            }
+            
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span>🔍 Analyzing Characters...</span>';
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch('/api/analyze-file', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'File analysis failed');
+                }
+                
+                const data = await response.json();
+                if (data.speakers && data.speakers.length > 0) {
+                    detectedSpeakers = data.speakers;
+                    speakerGenders = data.speaker_genders || {};
+                    showVoiceAssignmentPanel();
+                    showToast(`Detected ${data.speakers.length} characters in your file! You can assign voices below.`, 'success');
+                } else {
+                    showToast('No characters detected in this file snippet. Narrator voice will be used.', 'info');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        // Show character selection panel
+        function showVoiceAssignmentPanel() {
+            const panel = document.getElementById('assignmentPanel');
+            const container = document.getElementById('assignmentRowsContainer');
+            container.innerHTML = '';
+            
+            // Auto setup initial map using hash logic to create distinct assignments
+            detectedSpeakers.forEach((speaker, i) => {
+                if (!assignedVoiceMap[speaker]) {
+                    assignedVoiceMap[speaker] = autoAssignVoice(speaker, i);
+                }
+            });
+
+            detectedSpeakers.forEach((speaker) => {
+                const row = document.createElement('div');
+                row.className = 'speaker-assignment-row';
+                
+                let voiceOptionsHTML = '';
+                Object.entries(voiceCatalog).forEach(([key, voice]) => {
+                    const isSelected = assignedVoiceMap[speaker] === key;
+                    voiceOptionsHTML += `<option value="${key}" ${isSelected ? 'selected' : ''}>${voice.name} (${voice.gender}, ${voice.accent})</option>`;
+                });
+
+                row.innerHTML = `
+                    <span class="speaker-name">${speaker}</span>
+                    <div class="assign-controls">
+                        <select onchange="updateSpeakerVoice('${speaker}', this.value)">
+                            ${voiceOptionsHTML}
+                        </select>
+                        <button class="btn-preview" style="padding: 0.35rem 0.75rem; font-size: 0.75rem;" onclick="playVoicePreview(assignedVoiceMap['${speaker}'], event)">
+                            <span>▶ Preview</span>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            panel.classList.add('active');
+        }
+
+        function updateSpeakerVoice(speaker, voiceKey) {
+            assignedVoiceMap[speaker] = voiceKey;
+            showToast(`Assigned ${voiceCatalog[voiceKey].name} to ${speaker}`);
+        }
+
+        function autoAssignVoice(speaker, index) {
+            // Default mappings
+            if (speaker.toLowerCase() === 'narrator') return 'davis'; // Davis is default narrator
+            
+            // Get detected gender
+            const gender = (speakerGenders[speaker] || 'male').toLowerCase();
+            
+            // Filter catalog keys by gender (exclude davis/narrator if possible)
+            const matchingKeys = Object.entries(voiceCatalog)
+                .filter(([key, v]) => v.gender.toLowerCase() === gender && key !== 'davis')
+                .map(([key]) => key);
+                
+            if (matchingKeys.length > 0) {
+                return matchingKeys[index % matchingKeys.length];
+            }
+            
+            // Fallback to any voice except default narrator
+            const allKeys = Object.keys(voiceCatalog).filter(k => k !== 'davis');
+            const list = allKeys.length > 0 ? allKeys : Object.keys(voiceCatalog);
+            return list[index % list.length] || 'davis';
+        }
+
+        function autoAssignAll() {
+            detectedSpeakers.forEach((speaker, i) => {
+                assignedVoiceMap[speaker] = autoAssignVoice(speaker, i);
+            });
+            showVoiceAssignmentPanel();
+            showToast('Voice assignments reset to smart defaults');
+        }
+
+        // Character counter logic
+        document.getElementById('inputText').addEventListener('input', function() {
+            const count = this.value.length;
+            const counter = document.getElementById('charCount');
+            counter.textContent = `${count.toLocaleString()} / 30,000 chars`;
+            if (count > 30000) {
+                counter.style.color = 'var(--accent-pink)';
+            } else {
+                counter.style.color = 'var(--text-muted)';
+            }
+        });
+
+        // Trigger Narrate generation / upload process on button click
+        async function handleGenerateClick() {
+            if (currentTab === 'paste') {
+                const text = document.getElementById('inputText').value.trim();
+                if (!text) {
+                    showToast('Please enter some text first', 'error');
+                    return;
+                }
+                
+                // If character panel is hidden but speakers aren't parsed, we parse characters first
+                if (detectedSpeakers.length === 0 && text.length > 50) {
+                    setStatus('Analyzing characters in your text...', 'info');
+                    await triggerLocalParse();
+                    if (detectedSpeakers.length > 0) {
+                        setStatus('Characters identified. Review assignments below, then click generate again.', 'info');
+                        return;
+                    }
+                }
+                
+                await generatePasteNarration(text);
+            } else {
+                // File upload flow
+                const file = fileInput.files[0];
+                if (!file) {
+                    showToast('Please select or drop a file first', 'error');
+                    return;
+                }
+                await uploadAndProcessFile(file);
+            }
+        }
+
+        // Paste Text Narration Call
+        async function generatePasteNarration(text) {
+            const btn = document.getElementById('mainAppBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            resetPlayer();
+            document.getElementById('progressWrapper').classList.add('active');
+            updateProgress(15, 'Scanning dialogues and attributions...');
+
+            try {
+                // Determine voice map parameters (pass only if assigned)
+                const voiceMapPayload = Object.keys(assignedVoiceMap).length > 0 ? assignedVoiceMap : null;
+                
+                updateProgress(45, 'Synthesizing voice segments on edge servers...');
+                
+                const response = await fetch('/api/narrate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text: text,
+                        voice_map: voiceMapPayload
+                    })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Speech generation failed');
+                }
+
+                updateProgress(85, 'Merging segments with inter-speaker padding...');
+                const data = await response.json();
+                
+                updateProgress(100, 'Audio ready!');
+                
+                setTimeout(() => {
+                    document.getElementById('progressWrapper').classList.remove('active');
+                }, 800);
+
+                showToast('Narration generated successfully!', 'success');
+                loadAudioPlayer(data.audio_url, data.blocks);
+                
+            } catch (err) {
+                showToast(err.message, 'error');
+                document.getElementById('progressWrapper').classList.remove('active');
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // File upload workflow
+        async function uploadAndProcessFile(file) {
+            const btn = document.getElementById('mainAppBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            resetPlayer();
+            document.getElementById('progressWrapper').classList.add('active');
+            updateProgress(10, 'Uploading manuscript to server...');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // If they happen to have pre-configured voice mappings
+            if (Object.keys(assignedVoiceMap).length > 0) {
+                formData.append('voice_map', JSON.stringify(assignedVoiceMap));
+            }
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Upload failed');
+                }
+
+                const data = await response.json();
+                const jobId = data.job_id;
+                
+                updateProgress(20, 'Queued on server...');
+                pollJobStatus(jobId);
+                
+            } catch (err) {
+                showToast(err.message, 'error');
+                document.getElementById('progressWrapper').classList.remove('active');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Poll background file jobs
+        async function pollJobStatus(jobId) {
+            const btn = document.getElementById('mainAppBtn');
+            
+            try {
+                const response = await fetch(`/api/status/${jobId}`);
+                if (!response.ok) throw new Error('Polling status failed');
+                const job = await response.json();
+
+                if (job.status === 'completed') {
+                    updateProgress(100, 'Processing completed!');
+                    setTimeout(() => {
+                        document.getElementById('progressWrapper').classList.remove('active');
+                    }, 800);
+                    showToast('Document conversion successful!', 'success');
+                    loadAudioPlayer(job.audio_url, []);
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                } else if (job.status === 'failed') {
+                    throw new Error(job.error || 'Background novel processing failed.');
+                } else {
+                    // Update state description
+                    let pct = 30;
+                    if (job.status.includes('chunk')) {
+                        let chunkBase = 40 + Math.floor(((job.current_chunk - 1) / (job.total_chunks || 1)) * 40);
+                        let chunkWeight = 40 / (job.total_chunks || 1);
+                        let clipProgress = (job.chunk_current_clip || 0) / (job.chunk_total_clips || 1);
+                        pct = Math.floor(chunkBase + (clipProgress * chunkWeight));
+                    } else if (job.status === 'merging') {
+                        pct = 90;
+                    }
+                    
+                    let statusLabel = `Running: ${job.status}`;
+                    if (job.chunk_current_clip && job.chunk_total_clips) {
+                        statusLabel = `Running: ${job.status} (clip ${job.chunk_current_clip}/${job.chunk_total_clips})`;
+                    }
+                    updateProgress(pct, statusLabel);
+                    setTimeout(() => pollJobStatus(jobId), 1500);
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+                document.getElementById('progressWrapper').classList.remove('active');
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Update progress bar visuals
+        function updateProgress(percent, label) {
+            document.getElementById('progressText').textContent = label;
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+            document.getElementById('progressBarFill').style.width = `${percent}%`;
+        }
+
+        function setStatus(text, type) {
+            showToast(text, type);
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let emoji = 'ℹ️';
+            if (type === 'success') emoji = '✅';
+            if (type === 'error') emoji = '❌';
+            
+            toast.innerHTML = `<span>${emoji}</span><span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
+        }
+
+        // Reset UI Helper
+        function resetUI() {
+            resetPlayer();
+            detectedSpeakers = [];
+            assignedVoiceMap = {};
+            document.getElementById('assignmentPanel').classList.remove('active');
+        }
+
+        // Reset player parameters
+        function resetPlayer() {
+            stopPlayback();
+            document.getElementById('playerContainer').classList.remove('active');
+            generatedAudioUrl = '';
+            parsedBlocksList = [];
+        }
+
+        // === Custom Waveform Audio Player Logic ===
+        function loadAudioPlayer(audioUrl, blocks) {
+            generatedAudioUrl = audioUrl;
+            parsedBlocksList = blocks || [];
+            
+            nativeAudio.src = audioUrl;
+            nativeAudio.load();
+            
+            document.getElementById('playerContainer').classList.add('active');
+            document.getElementById('downloadBtn').onclick = () => {
+                window.open(audioUrl, '_blank');
+            };
+
+            // Populate parsed segments list
+            renderParsedBlocks();
+            
+            // Build fake waveform bars inside canvas
+            generateWaveformBars();
+            drawWaveform();
+        }
+
+        function renderParsedBlocks() {
+            const container = document.getElementById('parsedContentBody');
+            const section = document.getElementById('parsedSection');
+            
+            if (parsedBlocksList.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+            
+            section.style.display = 'block';
+            container.innerHTML = '';
+            
+            parsedBlocksList.forEach(block => {
+                const item = document.createElement('div');
+                item.className = 'dialogue-item';
+                
+                const isNarrator = block.speaker.toLowerCase() === 'narrator';
+                
+                item.innerHTML = `
+                    <div class="dialogue-meta">
+                        <span class="dialogue-speaker ${isNarrator ? 'narrator' : ''}">${block.speaker}</span>
+                        <span class="dialogue-emotion-pill">${block.emotion}</span>
+                    </div>
+                    <div class="dialogue-text">${block.dialogue}</div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function toggleParsedSection() {
+            const section = document.getElementById('parsedSection');
+            section.classList.toggle('open');
+        }
+
+        // Generate synthetic waveform bars mapping to audio timeline
+        function generateWaveformBars() {
+            waveformData = [];
+            const numBars = 75;
+            for (let i = 0; i < numBars; i++) {
+                // Generate a random but smooth harmonic looking waveform
+                const height = Math.abs(Math.sin(i * 0.15) * 45) + Math.random() * 15 + 5;
+                waveformData.push(height);
+            }
+        }
+
+        // Draw waveform on canvas
+        function drawWaveform() {
+            const rect = canvas.getBoundingClientRect();
+            const w = rect.width || 600;
+            const h = rect.height || 80;
+            
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Only adjust size if it has changed to prevent infinite loops
+            if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+                canvas.width = Math.floor(w * dpr);
+                canvas.height = Math.floor(h * dpr);
+                ctx.scale(dpr, dpr);
+            }
+            
+            ctx.clearRect(0, 0, w, h);
+
+            const barWidth = w / (waveformData.length || 1) - 2;
+            const currentPct = nativeAudio.currentTime / (nativeAudio.duration || 1);
+
+            for (let i = 0; i < waveformData.length; i++) {
+                const x = i * (barWidth + 2);
+                let barHeight = waveformData[i];
+                
+                // Add micro animation oscillation when playing
+                if (isPlaying) {
+                    const noise = Math.sin(Date.now() * 0.008 + i) * 6;
+                    barHeight = Math.max(5, barHeight + noise);
+                }
+
+                const y = (h - barHeight) / 2;
+
+                // Color bar based on progress
+                const isPlayed = (i / waveformData.length) <= currentPct;
+                
+                if (isPlayed) {
+                    // Gradient cyan to purple for played side
+                    const grad = ctx.createLinearGradient(x, y, x, y + barHeight);
+                    grad.addColorStop(0, '#7c3aed');
+                    grad.addColorStop(1, '#06b6d4');
+                    ctx.fillStyle = grad;
+                } else {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+                }
+
+                // Draw rounded rect bar
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, barHeight, 3);
+                ctx.fill();
+            }
+
+            if (isPlaying) {
+                animationFrameId = requestAnimationFrame(drawWaveform);
+            }
+        }
+
+        // Audio controls
+        function togglePlayback() {
+            if (isPlaying) {
+                stopPlayback();
+            } else {
+                startPlayback();
+            }
+        }
+
+        async function startPlayback() {
+            try {
+                await nativeAudio.play();
+                isPlaying = true;
+                document.getElementById('playPauseBtn').textContent = '⏸';
+                drawWaveform(); // Start animation loop
+            } catch (err) {
+                showToast('Playback failed: ' + err.message, 'error');
+            }
+        }
+
+        function stopPlayback() {
+            nativeAudio.pause();
+            isPlaying = false;
+            document.getElementById('playPauseBtn').textContent = '▶';
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+            // Redraw static one last time to capture correct currentTime frame
+            drawWaveform();
+        }
+
+        function handlePlaybackEnd() {
+            stopPlayback();
+            nativeAudio.currentTime = 0;
+            updatePlaybackProgress();
+        }
+
+        function updateDuration() {
+            const duration = nativeAudio.duration;
+            document.getElementById('totalTime').textContent = formatTime(duration);
+        }
+
+        function updatePlaybackProgress() {
+            const curTime = nativeAudio.currentTime;
+            const duration = nativeAudio.duration || 1;
+            
+            document.getElementById('currentTime').textContent = formatTime(curTime);
+            
+            const pct = (curTime / duration) * 100;
+            document.getElementById('playProgress').style.width = `${pct}%`;
+            
+            // Draw waveform to update progress color boundary even if paused
+            if (!isPlaying) {
+                drawWaveform();
+            }
+        }
+
+        function seekAudio(event) {
+            const rect = document.getElementById('playTrack').getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const width = rect.width;
+            
+            const pct = clickX / width;
+            const seekTime = pct * nativeAudio.duration;
+            nativeAudio.currentTime = seekTime;
+            updatePlaybackProgress();
+        }
+
+        function changeVolume(val) {
+            nativeAudio.volume = val;
+        }
+
+        function formatTime(secs) {
+            if (isNaN(secs)) return '00:00';
+            const m = Math.floor(secs / 60);
+            const s = Math.floor(secs % 60);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        }
+
+        // API tabs helper
+        function switchApiTab(event, tabId) {
+            document.querySelectorAll('.api-tabs .api-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.api-content .api-pane').forEach(pane => {
+                pane.classList.remove('active');
+            });
+            document.getElementById(`pane-${tabId}`).classList.add('active');
+        }
+
+        // API Examples code language helper
+        function switchLangTab(event, lang) {
+            const tabContainer = event.target.parentNode;
+            tabContainer.querySelectorAll('.code-lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            const codeWrapper = tabContainer.nextElementSibling;
+            codeWrapper.querySelectorAll('.code-block').forEach(block => {
+                block.classList.remove('active');
+            });
+            document.getElementById(`code-${lang}`).classList.add('active');
+        }
+    </script>
+</body>
+</html>
